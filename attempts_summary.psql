@@ -1,0 +1,62 @@
+select 
+assessment_id
+, user_id 
+, first_attempt 
+, last_attempt
+, avg_attempt 
+, total_attempts 
+, case when first_attempt >= pass_score 
+	 or last_attempt >= pass_score then TRUE
+	else FALSE
+	end as passing
+from (
+	select 
+	aa.assessment_id
+	, aa.user_id
+	, mn.score first_attempt
+	, mx.score last_attempt
+	, aver.score avg_attempt
+	, aver.attempts total_attempts
+	, ps.passing_score pass_score
+	from assessmentattempts aa
+	left JOIN(
+		select
+		assessment_id
+		, user_id
+		, score
+		FROM(
+			select *, row_number() OVER(partition by assessment_id, user_id order by submitted_at) as rnum
+			from assessmentattempts
+		) rnm
+		where rnm.rnum=1
+	) mn
+	on aa.assessment_id = mn.assessment_id
+	and aa.user_id = mn.user_id
+	left join(
+		select
+		assessment_id
+		, user_id
+		, score
+		FROM(
+			select *, row_number() OVER(partition by assessment_id, user_id order by submitted_at desc) as rnum
+			from assessmentattempts
+		) rnm
+		where rnm.rnum=1
+	) mx
+	on aa.assessment_id = mx.assessment_id
+	and aa.user_id = mx.user_id
+	left join(
+		select assessment_id, user_id, avg(score) score, count(score) attempts
+		from assessmentattempts 
+		group by (assessment_id, user_id)
+	) aver
+	on aa.assessment_id = aver.assessment_id
+	and aa.user_id = aver.user_id
+	left join(
+		select *
+		from assessments 
+	) ps 
+	on ps.assessment_id = aa.assessment_id
+) al
+group by assessment_id, user_id, first_attempt, last_attempt, avg_attempt,total_attempts, pass_score
+order by al.total_attempts desc

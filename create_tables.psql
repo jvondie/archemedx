@@ -1,0 +1,44 @@
+-- Setup Learners Table
+DROP TABLE IF EXISTS Users;
+create table Users (user_id INT, given_name VARCHAR(200), family_name VARCHAR(200), company_id INT);
+insert into Users (user_id, given_name, family_name, company_id)
+values (3453, 'John', 'Smith', 1),
+       (4586, 'Jane', 'Doe', 2),
+       (7890, 'George', NULL, 1);
+
+-- Setup Assessments Table
+DROP TABLE IF EXISTS Assessments;
+create table Assessments (assessment_id INT, passing_score FLOAT);
+insert into Assessments (assessment_id, passing_score)
+values (7853, 0.95);
+
+-- Setup AssessmentAttempts Table
+DROP TABLE IF EXISTS AssessmentAttempts;
+create table AssessmentAttempts (assessment_id INT, user_id INT, score FLOAT, submitted_at TIMESTAMP);
+insert into AssessmentAttempts (assessment_id, user_id, score, submitted_at)
+values (7853, 3453, 0.65, '2020-04-03 10:43:53'),
+       (7853, 3453, 0.92, '2020-04-04 10:58:32'),
+       (7853, 4586, 0.95, '2020-04-15 13:56:51');
+
+-- Setup Companies Table
+DROP TABLE IF EXISTS Companies;
+create table Companies (company_id INT, name VARCHAR(200));
+insert into Companies (company_id, name)
+values (1, 'ArcheMedX'),
+       (2, 'Cognitect');
+       
+-- Setup Analytics Table
+DROP TABLE IF EXISTS Analytics;
+create table Analytics (assessment_id INT, user_id INT, question_index INT, time TIMESTAMP);
+insert into Analytics (assessment_id, user_id, question_index, time)
+values (7853, 3453, 0, '2020-04-03 10:34:01'),
+       (7853, 3453, 0, '2020-04-03 10:34:25'),
+       (7853, 3453, 0, '2020-04-03 10:43:13'),
+       (7853, 3453, 0, '2020-04-03 10:43:23'),
+       (7853, 3453, 1, '2020-04-03 10:43:24'),
+       (7853, 3453, 1, '2020-04-03 10:43:33'),
+       (7853, 3453, 0, '2020-04-04 10:43:33'),
+       (7853, 3453, 0, '2020-04-04 10:43:43'),
+       (7853, 3453, 0, '2020-04-04 10:43:59'),
+       (7853, 3453, 1, '2020-04-04 10:44:00'),
+       (7853, 3453, 1, '2020-04-04 10:44:22');
