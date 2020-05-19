@@ -1,17 +1,47 @@
 select 
-assessment_id
-, question_index
-, user_id
-, el
-,split_part(el, ';', 1) as start_time
-, split_part(el, ';', 2) as end_time
-from (
+c.assessment_id
+, c.user_id
+, aa.submitted_at
+, c.question_index
+, c.time_spent_in_sec
+FROM(
 	select 
 	assessment_id
 	, user_id
 	, question_index
-	,string_agg (cast(time as varchar), ';') el 
-	from 
-	analytics
-	group by assessment_id, user_id, question_index, date(time)
-) a
+	, start_time :: timestamp 
+	,case when length(next_time_three) > 0 THEN
+		(next_time_three :: timestamp - next_time_two :: timestamp) + (next_time :: timestamp - start_time :: timestamp)
+		when length(next_time_two) > 0 then
+		(next_time_two :: timestamp - next_time :: timestamp) + (next_time :: timestamp - start_time :: timestamp)
+		
+		else (next_time :: timestamp - start_time :: timestamp)
+		end as time_spent_in_sec
+	from(
+	select 
+	assessment_id 
+	, user_id
+	, question_index
+	, split_part(el, ';', 1) as start_time
+	, split_part(el, ';', 2) as next_time
+	, split_part(el, ';', 3) as next_time_two
+	, split_part(el, ';', 4) as next_time_three
+	from (
+		select 
+		assessment_id
+		, user_id
+		, question_index
+		,string_agg (cast(time as varchar), ';') el 
+		from 
+		analytics
+		group by assessment_id, user_id, question_index, date(time)
+	) a
+	)b
+) c
+left join (
+	select * from assessmentattempts 
+	) aa 
+on aa.assessment_id = c.assessment_id
+and aa.user_id = c.user_id
+and date(aa.submitted_at) = date(c.start_time)
+	
