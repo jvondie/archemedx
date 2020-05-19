@@ -1,0 +1,17 @@
+select 
+assessment_id
+, question_index
+, user_id
+, el
+,split_part(el, ';', 1) as start_time
+, split_part(el, ';', 2) as end_time
+from (
+	select 
+	assessment_id
+	, user_id
+	, question_index
+	,string_agg (cast(time as varchar), ';') el 
+	from 
+	analytics
+	group by assessment_id, user_id, question_index, date(time)
+) a
