@@ -1,0 +1,17 @@
+select ts.assessment_id, ts.user_id, aa.submitted_at, ts.question_index, ts.time_spent_in_sec from (
+
+select assessment_id, user_id, question_index , date(time) test_date, extract(EPOCH from sum(time_spent)) time_spent_in_sec from (
+	
+select *, time-previous_stamp as time_spent from(
+		select *, lag(time, 1) over (partition by user_id, question_index, date(time) order by user_id, question_index, time) previous_stamp 
+		from analytics a 
+		group by user_id, question_index, date(time), assessment_id, time
+		) a
+		) b
+	where b.time_spent < '00:05:00'
+	group by user_id, question_index, date(time), assessment_id
+) ts
+left join assessmentattempts aa 
+on aa.assessment_id = ts.assessment_id
+and aa.user_id = ts.user_id
+and date(aa.submitted_at) = date(ts.test_date)
